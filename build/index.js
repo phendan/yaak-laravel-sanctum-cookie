@@ -50,7 +50,12 @@ var plugin = {
         if (httpRequest === null) return null;
         const response = await ctx.httpRequest.send({ httpRequest });
         if (response.error || response.status === 0) {
-          const message = `Failed to send dependent request: ${httpRequest?.name}`;
+          const message = httpRequest.name ? `The dependent request could not be sent: ${httpRequest?.name}` : "The dependent request could not be sent.";
+          ctx.toast.show({ color: "warning", message });
+          return null;
+        }
+        if (response.status >= 400) {
+          const message = httpRequest.name ? `The server returned an error for the dependent request: ${httpRequest?.name}).` : "The server returned an error for the dependent request";
           ctx.toast.show({ color: "warning", message });
           return null;
         }
