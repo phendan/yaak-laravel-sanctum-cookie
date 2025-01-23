@@ -11,7 +11,7 @@ To use this plugin, proceed as follows:
 1. Create a request to your Laravel API's CSRF Cookie endpoint (`/sanctum/csrf-cookie`)
 2. Create the request for which you want CSRF protection (e.g. a login request)
 3. Go to the `Headers` tab of the protected request and add a key named `X-XSRF-TOKEN`. For the value of the header, start typing `laravel_csrf_cookie` and select the corresponding function.
-4. Click on the template and select your CSRF Cookie request to extract.
+4. Click on the template and select your CSRF Cookie request.
 
 That's it!
 
@@ -19,6 +19,6 @@ The template function will now automatically retrieve the CSRF Cookie, extract t
 
 ## Global Variables
 
-If you're using CSRF Protection in a lot of places, it might make sense to declare a global variable for the token value. This is possible in Yaak by setting the value of a global environment variable to the result of your template function.
+If you're using CSRF Protection in a lot of places, it might make sense to declare a global variable for the token value so that you only need to modify it one place. This is possible in Yaak by setting the value of a global environment variable to the result of your template function.
 
-To do this, open up your environment and select "Manage Environments" (or hit `CMD+Shift+E`). Add a variable like `csrfToken` and repeat steps 3. and 4. After that, use the environment variable in your header in place of the template function.
+To do this, open up your environment and select "Manage Environments" (or hit `CMD+Shift+E`). Add a variable (e.g. `csrfToken`) and add the template function as the value, much like in steps 3. and 4. After that, use the environment variable in your header in place of the template function.

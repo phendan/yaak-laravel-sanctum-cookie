@@ -1,7 +1,7 @@
 {
     "name": "laravel-sanctum-cookie",
     "private": true,
-    "version": "0.0.1",
+    "version": "0.0.3",
     "scripts": {
         "build": "yaakcli build ./src/index.ts"
     },
