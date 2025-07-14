@@ -8,7 +8,7 @@
         "url": "git+https://github.com/phendan/yaak-laravel-sanctum-cookie.git"
     },
     "private": true,
-    "version": "0.0.3",
+    "version": "0.0.4",
     "scripts": {
         "build": "yaakcli build ./src/index.ts"
     },
