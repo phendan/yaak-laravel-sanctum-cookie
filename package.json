@@ -1,5 +1,12 @@
 {
-    "name": "laravel-sanctum-cookie",
+    "name": "@phendan/laravel-sanctum-cookie",
+    "displayName": "Laravel Sanctum Cookie",
+    "description": "A plugin to simplify working with Laravel Sanctum and CSRF cookies.",
+    "homepage": "https://github.com/phendan/yaak-laravel-sanctum-cookie",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/phendan/yaak-laravel-sanctum-cookie.git"
+    },
     "private": true,
     "version": "0.0.3",
     "scripts": {

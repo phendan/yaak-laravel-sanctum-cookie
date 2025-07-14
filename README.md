@@ -8,7 +8,7 @@ Doing all this manually every time a request is sent is quite involved and time-
 
 To use this plugin, proceed as follows:
 
-1. Download the latest version of the plugin from the Releases page and add it to Yaak.
+1. In Yaak, go to `Settings > Plugins`, search for `Laravel Sanctum Cookie` and hit `Install`.
 2. Create a request to your Laravel API's CSRF Cookie endpoint (`/sanctum/csrf-cookie`)
 3. Create the request for which you want CSRF protection (e.g. a login request)
 4. Go to the `Headers` tab of the protected request and add a key named `X-XSRF-TOKEN`. For the value of the header, start typing `laravel_csrf_cookie` and select the corresponding function.
