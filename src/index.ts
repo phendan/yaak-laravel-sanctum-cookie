@@ -1,5 +1,7 @@
+import type { CallTemplateFunctionArgs, Context } from '@yaakapp/api';
 import { PluginDefinition } from '@yaakapp/api';
-import type { Context, CallTemplateFunctionArgs } from '@yaakapp/api';
+
+const pendingRequests = new Set<string>();
 
 export const plugin: PluginDefinition = {
     templateFunctions: [
@@ -10,7 +12,8 @@ export const plugin: PluginDefinition = {
                 {
                     type: 'http_request',
                     name: 'request',
-                    label: 'Sanctum Cookie Request'
+                    label: 'Sanctum Cookie Request',
+                    optional: true
                 },
                 {
                     type: 'text',
@@ -28,44 +31,58 @@ export const plugin: PluginDefinition = {
                 const cookieName = args.values.name ?? 'XSRF-TOKEN';
 
                 if (typeof requestId === 'undefined') return null;
-                const httpRequest = await ctx.httpRequest.getById({ id: requestId });
 
-                if (httpRequest === null) return null;
-                const response = await ctx.httpRequest.send({ httpRequest });
+                const requestKey = `${requestId}_${cookieName}`;
 
-                if (response.error || response.status === 0) {
-                    const message = httpRequest.name
-                        ? `The dependent request could not be sent: ${httpRequest?.name}`
-                        : 'The dependent request could not be sent.';
-                    ctx.toast.show({ color: 'warning', message });
+                if (pendingRequests.has(requestKey)) {
                     return null;
                 }
 
-                if (response.status >= 400) {
-                    const message = httpRequest.name
-                        ? `The server returned an error for the dependent request: ${httpRequest?.name}).`
-                        : 'The server returned an error for the dependent request';
-                    ctx.toast.show({ color: 'warning', message });
-                    return null;
+                pendingRequests.add(requestKey);
+
+                try {
+                    const httpRequest = await ctx.httpRequest.getById({ id: requestId });
+
+                    if (httpRequest === null) return null;
+
+                    const response = await ctx.httpRequest.send({ httpRequest });
+
+                    if (response.error || response.status === 0) {
+                        const message = httpRequest.name
+                            ? `The dependent request could not be sent: ${httpRequest?.name}`
+                            : 'The dependent request could not be sent.';
+                        ctx.toast.show({ color: 'warning', message });
+                        return null;
+                    }
+
+                    if (response.status >= 400) {
+                        const message = httpRequest.name
+                            ? `The server returned an error for the dependent request: ${httpRequest?.name}.`
+                            : 'The server returned an error for the dependent request';
+                        ctx.toast.show({ color: 'warning', message });
+                        return null;
+                    }
+
+                    const cookie = response.headers.find(it => {
+                        return (
+                            (it.name === 'Set-Cookie' || it.name === 'set-cookie') &&
+                            it.value.includes(cookieName)
+                        );
+                    });
+
+                    if (typeof cookie === 'undefined') {
+                        const message = `There was no ${cookieName} header present on the response.`;
+                        ctx.toast.show({ color: 'warning', message });
+                        return null;
+                    }
+
+                    const pattern = new RegExp(`(?<=${cookieName}=)[^;]+`, 'g');
+                    const token = cookie.value.match(pattern)![0];
+
+                    return decodeURIComponent(token);
+                } finally {
+                    pendingRequests.delete(requestKey);
                 }
-
-                const cookie = response.headers.find(it => {
-                    return (
-                        (it.name === 'Set-Cookie' || it.name === 'set-cookie') &&
-                        it.value.includes(cookieName)
-                    );
-                });
-
-                if (typeof cookie === 'undefined') {
-                    const message = `There was no ${cookieName} header present on the response.`;
-                    ctx.toast.show({ color: 'warning', message });
-                    return null;
-                }
-
-                const pattern = new RegExp(`(?<=${cookieName}=)[^;]+`, 'g');
-                const token = cookie.value.match(pattern)![0];
-
-                return decodeURIComponent(token);
             }
         }
     ]
