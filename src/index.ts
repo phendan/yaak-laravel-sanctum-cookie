@@ -1,5 +1,4 @@
-import type { CallTemplateFunctionArgs, Context } from '@yaakapp/api';
-import { PluginDefinition } from '@yaakapp/api';
+import type { PluginDefinition, CallTemplateFunctionArgs, Context } from '@yaakapp/api';
 
 const pendingRequests = new Set<string>();
 
@@ -33,10 +32,7 @@ export const plugin: PluginDefinition = {
                 if (typeof requestId === 'undefined') return null;
 
                 const requestKey = `${requestId}_${cookieName}`;
-
-                if (pendingRequests.has(requestKey)) {
-                    return null;
-                }
+                if (pendingRequests.has(requestKey)) return null;
 
                 pendingRequests.add(requestKey);
 
