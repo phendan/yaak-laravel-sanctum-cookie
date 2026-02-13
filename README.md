@@ -1,10 +1,10 @@
 # Laravel Sanctum Cookie - Yaak Plugin
 
-Authenticating a web app with a Laravel API via [Sanctum](https://laravel.com/docs/11.x/sanctum#spa-authentication) requires first sending a request to your API's CSRF Cookie endpoint and extracting the CSRF Token. This token then needs to be URL-decoded and sent along in the subsequent request using the custom `X-XSRF-TOKEN` header.
+Authenticating a web app with a Laravel API via [Sanctum](https://laravel.com/docs/12.x/sanctum#spa-authentication) requires first sending a request to your API's CSRF Cookie endpoint and extracting the CSRF Token. This token then needs to be URL-decoded and sent along in the subsequent request using the custom `X-XSRF-TOKEN` header.
 
-Doing all this manually every time a request is sent is quite involved and time-consuming. Therefore I wrote this little plugin for the [Yaak](https://yaak.app/) API client to make the process simpler using a template function.
+Doing all this manually every time a request is sent is quite involved and time-consuming. To make things simpler, I wrote this little plugin for the [Yaak](https://yaak.app/) API client which provides a template function to automate the process.
 
-# Usage
+# Basic Usage
 
 To use this plugin, proceed as follows:
 
@@ -18,11 +18,17 @@ That's it!
 
 The template function will now automatically retrieve the CSRF Cookie, extract the token, and attach it to your request.
 
+# Advanced Usage
+
 ## Global Variables
 
 If you're using CSRF protection in a lot of places, it might make sense to declare a global variable for the token value so that it's easily configurable. This is possible in Yaak by setting the value of a global environment variable to the result of your template function.
 
-To do this, open up your environment and select "Manage Environments" (or hit `CMD+Shift+E`). Add a variable (e.g. `csrfToken`) and add the template function as the value, much like in steps 3. and 4. After that, use the environment variable in your request's `X-XSRF-TOKEN` header in place of the template function.
+To do this, open up your environment and select "Manage Environments" (or hit `CMD+Shift+E` ). Add a variable (e.g. `csrfToken` ) and add the template function as the value, much like in steps 3. and 4. After that, use the environment variable in your request's `X-XSRF-TOKEN` header in place of the template function.
+
+## Central Configuration
+
+If you'd rather not configure the header for each request individually, you can instead define it at the folder level or even for the entire workspace. Note that this currently means the extra request to fetch the CSRF cookie will run for *every* request in that folder or workspace, even GET requests, which may or may not be what you want.
 
 # Further Reading
 
