@@ -18,11 +18,12 @@ var __copyProps = (to, from, except, desc) => {
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // src/index.ts
-var src_exports = {};
-__export(src_exports, {
+var index_exports = {};
+__export(index_exports, {
   plugin: () => plugin
 });
-module.exports = __toCommonJS(src_exports);
+module.exports = __toCommonJS(index_exports);
+var pendingRequests = /* @__PURE__ */ new Set();
 var plugin = {
   templateFunctions: [
     {
@@ -32,7 +33,8 @@ var plugin = {
         {
           type: "http_request",
           name: "request",
-          label: "Sanctum Cookie Request"
+          label: "Sanctum Cookie Request",
+          optional: true
         },
         {
           type: "text",
@@ -46,30 +48,37 @@ var plugin = {
         const requestId = args.values.request;
         const cookieName = args.values.name ?? "XSRF-TOKEN";
         if (typeof requestId === "undefined") return null;
-        const httpRequest = await ctx.httpRequest.getById({ id: requestId });
-        if (httpRequest === null) return null;
-        const response = await ctx.httpRequest.send({ httpRequest });
-        if (response.error || response.status === 0) {
-          const message = httpRequest.name ? `The dependent request could not be sent: ${httpRequest?.name}` : "The dependent request could not be sent.";
-          ctx.toast.show({ color: "warning", message });
-          return null;
+        const requestKey = `${requestId}_${cookieName}`;
+        if (pendingRequests.has(requestKey)) return null;
+        pendingRequests.add(requestKey);
+        try {
+          const httpRequest = await ctx.httpRequest.getById({ id: requestId });
+          if (httpRequest === null) return null;
+          const response = await ctx.httpRequest.send({ httpRequest });
+          if (response.error || response.status === 0) {
+            const message = httpRequest.name ? `The dependent request could not be sent: ${httpRequest?.name}` : "The dependent request could not be sent.";
+            ctx.toast.show({ color: "warning", message });
+            return null;
+          }
+          if (response.status >= 400) {
+            const message = httpRequest.name ? `The server returned an error for the dependent request: ${httpRequest?.name}.` : "The server returned an error for the dependent request";
+            ctx.toast.show({ color: "warning", message });
+            return null;
+          }
+          const cookie = response.headers.find((it) => {
+            return (it.name === "Set-Cookie" || it.name === "set-cookie") && it.value.includes(cookieName);
+          });
+          if (typeof cookie === "undefined") {
+            const message = `There was no ${cookieName} header present on the response.`;
+            ctx.toast.show({ color: "warning", message });
+            return null;
+          }
+          const pattern = new RegExp(`(?<=${cookieName}=)[^;]+`, "g");
+          const token = cookie.value.match(pattern)[0];
+          return decodeURIComponent(token);
+        } finally {
+          pendingRequests.delete(requestKey);
         }
-        if (response.status >= 400) {
-          const message = httpRequest.name ? `The server returned an error for the dependent request: ${httpRequest?.name}).` : "The server returned an error for the dependent request";
-          ctx.toast.show({ color: "warning", message });
-          return null;
-        }
-        const cookie = response.headers.find((it) => {
-          return (it.name === "Set-Cookie" || it.name === "set-cookie") && it.value.includes(cookieName);
-        });
-        if (typeof cookie === "undefined") {
-          const message = `There was no ${cookieName} header present on the response.`;
-          ctx.toast.show({ color: "warning", message });
-          return null;
-        }
-        const pattern = new RegExp(`(?<=${cookieName}=)[^;]+`, "g");
-        const token = cookie.value.match(pattern)[0];
-        return decodeURIComponent(token);
       }
     }
   ]
